@@ -13,7 +13,7 @@
  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 
-<!-- 비용 START -->
+<!-- 비용 START2 -->
 <div class="container" style="margin-top: 50px">
 	<div class="col-sm-12">
 		<label for="disabledInput" class="col-sm-12 control-label"></label>
