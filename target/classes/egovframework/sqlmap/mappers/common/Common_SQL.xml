@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "Common">
+
+	<!-- 	코드 테이블 에서 셀렉트 박스 리스트 검색 -->
+	<select id="selectCombo" parameterType="map" resultType="egovMap">
+		SELECT
+		  CODE,
+		  COM_KOR
+		FROM CODE_MASTER
+		WHERE
+			CATEGORY = #{category}
+		AND
+			 USE_YN = 'Y'
+	</select>
+	
+	<select id="getComKor" parameterType="map" resultType="String">
+		SELECT
+	    COM_KOR
+		FROM CODE_MASTER
+		WHERE
+		code = #{code}
+	</select> 
+	
+	<!-- 회원의 회계정보 리스트 -->
+	<select id="accountList" resultType="map">
+		<![CDATA[
+		   SELECT FC_CODE(PROFIT_COST) AS PROFIT_COST
+	    ,FC_CODE(BIG_GROUP) AS BIG_GROUP
+	    ,FC_CODE(MIDDLE_GROUP) AS MIDDLE_GROUP
+	    ,FC_CODE(SMALL_GROUP) AS SMALL_GROUP
+	    ,FC_CODE(DETAIL_GROUP) AS DETAIL_GROUP
+	    ,TRANSACTION_MONEY
+	    ,TO_CHAR(TRANSACTION_DATE, 'YYYY"년"MM"월"DD"일"') TRANSACTION_DATE
+	    ,WRITER
+	FROM( 
+	    SELECT ROWNUM AS RNUM , A.* FROM (
+	        SELECT * FROM ACCOUNT_TB A 
+	        INNER JOIN CODE_MASTER B ON A.PROFIT_COST = B.CODE
+	        WHERE WRITER = #{userName, jdbcType=VARCHAR}
+	        ORDER BY A.ACCOUNT_SEQ DESC
+	)A )B WHERE RNUM >= #{startrow, jdbcType=INTEGER} AND RNUM <= #{endrow, jdbcType=INTEGER}
+			]]>
+		
+	</select>
+	
+	<!-- 엑셀 회원정보 리스트  -->
+	<select id="excelList" resultType="map">
+		<![CDATA[
+			SELECT
+				ACCOUNT_SEQ
+		        ,FC_CODE(PROFIT_COST) AS PROFIT_COST
+	    		,FC_CODE(BIG_GROUP) AS BIG_GROUP
+	    		,FC_CODE(MIDDLE_GROUP) AS MIDDLE_GROUP
+	    		,FC_CODE(SMALL_GROUP) AS SMALL_GROUP
+	    		,FC_CODE(DETAIL_GROUP) AS DETAIL_GROUP
+		        , COMMENTS
+		        , TRANSACTION_MONEY
+			    ,TO_CHAR(TRANSACTION_DATE, 'YYYY"년"MM"월"DD"일"') TRANSACTION_DATE
+			    ,WRITER
+				FROM ACCOUNT_TB 
+			        WHERE WRITER = #{userName, jdbcType=VARCHAR}
+			        ORDER BY ACCOUNT_SEQ DESC
+			]]>
+	</select>
+	
+	<!-- 수정화면 뿌려주기 -->
+	<select id="accountSeqNum" resultType="map" parameterType="int">
+		SELECT ACCOUNT_SEQ
+		        , PROFIT_COST
+		        , BIG_GROUP
+		        , MIDDLE_GROUP
+		        , SMALL_GROUP
+		        , DETAIL_GROUP
+		        , COMMENTS
+		        , TRANSACTION_MONEY
+		        , TRANSACTION_DATE
+		        , WRITER
+		        , REG_DATE
+		    FROM ACCOUNT_TB
+		  WHERE ACCOUNT_SEQ = #{account_seq}
+	</select>
+	
+	
+	<!-- 페이징 총게시글  -->
+	<select id="getAllAccount" resultType="int"> <!-- resultType="ino.web.board.dto.BoardDto" -->
+		SELECT COUNT(*) FROM ACCOUNT_TB
+	</select>
+	
+	
+	<update id="accountUpdatePro" parameterType="map">
+		UPDATE ACCOUNT_TB
+			SET PROFIT_COST = #{profitCost, jdbcType=VARCHAR}
+			    , BIG_GROUP = #{bigGroup, jdbcType=VARCHAR}
+		        , MIDDLE_GROUP = #{middleGroup, jdbcType=VARCHAR}
+		        , SMALL_GROUP = #{smallGroup, jdbcType=VARCHAR}
+		        , DETAIL_GROUP = #{comment1, jdbcType=VARCHAR}
+		        , COMMENTS = #{comment}
+		        , TRANSACTION_MONEY = #{transactionMoney}
+		        , TRANSACTION_DATE = #{transactionDate}
+		        , WRITER = #{userName, jdbcType=VARCHAR}
+		        , REG_DATE = SYSDATE
+		   WHERE ACCOUNT_SEQ = #{account_seq}
+	</update>
+	
+	<!-- 회원으로 셀렉트옵션 추가기능 -->
+	<insert id="accountInsert" parameterType="HashMap">
+		<selectKey keyProperty="account_seq" resultType="int" order="AFTER">
+			SELECT ACCOUNT_SEQ.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO ACCOUNT_TB( ACCOUNT_SEQ
+							  , PROFIT_COST
+							  , BIG_GROUP
+							  , MIDDLE_GROUP
+							  , SMALL_GROUP
+							  , DETAIL_GROUP
+							  , COMMENTS
+							  , TRANSACTION_MONEY
+							  , TRANSACTION_DATE
+							  , WRITER
+							  , REG_DATE)
+		VALUES(ACCOUNT_SEQ.NEXTVAL
+				, #{profitCost}
+				, #{bigGroup}
+				, #{middleGroup}
+				, #{smallGroup, jdbcType=VARCHAR}
+				, #{comment1, jdbcType=VARCHAR}
+				, #{comment}
+				, #{transactionMoney}
+				, #{transactionDate}
+				, #{userName} 
+				, SYSDATE)
+	</insert>
+	
+</mapper>
